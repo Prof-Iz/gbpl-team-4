@@ -1,0 +1,86 @@
+[
+ {
+   "temp": 24,
+   "humidity": 225
+ },
+ {
+   "temp": 31,
+   "humidity": 237
+ },
+ {
+   "temp": 25,
+   "humidity": 143
+ },
+ {
+   "temp": 27,
+   "humidity": 151
+ },
+ {
+   "temp": 24,
+   "humidity": 137
+ },
+ {
+   "temp": 36,
+   "humidity": 231
+ },
+ {
+   "temp": 25,
+   "humidity": 242
+ },
+ {
+   "temp": 34,
+   "humidity": 246
+ },
+ {
+   "temp": 27,
+   "humidity": 201
+ },
+ {
+   "temp": 28,
+   "humidity": 247
+ },
+ {
+   "temp": 27,
+   "humidity": 250
+ },
+ {
+   "temp": 23,
+   "humidity": 108
+ },
+ {
+   "temp": 26,
+   "humidity": 177
+ },
+ {
+   "temp": 23,
+   "humidity": 201
+ },
+ {
+   "temp": 23,
+   "humidity": 102
+ },
+ {
+   "temp": 36,
+   "humidity": 104
+ },
+ {
+   "temp": 25,
+   "humidity": 216
+ },
+ {
+   "temp": 26,
+   "humidity": 205
+ },
+ {
+   "temp": 29,
+   "humidity": 129
+ },
+ {
+   "temp": 27,
+   "humidity": 181
+ },
+ {
+   "temp": 33,
+   "humidity": 221
+ }
+]
