@@ -6,7 +6,7 @@ body {
 
 .header {
     background-color: #222222;
-    /* height: 288px; */
+    min-height: 288px;
     padding: 16px 0 16px 0;
 }
 
@@ -48,7 +48,7 @@ body {
 
 .menu {
     height: 112px;
-    width: 912px;
+    max-width: 912px;
     display: flex;
     justify-content: space-evenly;
     padding-top: 24px;
