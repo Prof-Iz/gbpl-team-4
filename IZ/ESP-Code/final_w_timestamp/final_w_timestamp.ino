@@ -4,8 +4,8 @@
 #include <WiFi.h>
 #include <FirebaseESP32.h> //Wifi and Firebase Libararies
 
+
 FirebaseData fbdo;
-FirebaseJson json;
 FirebaseConfig config_data;
 FirebaseAuth auth;
 
@@ -22,6 +22,10 @@ FirebaseAuth auth;
 float t, h;
 
 DHT dht(DHTPIN, DHTTYPE);
+
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = 18000;
+const int   daylightOffset_sec = 0;
 
 
 void setup() {
@@ -55,10 +59,12 @@ void loop() {
   {
     t = dht.readTemperature();
     h = dht.readHumidity();
-    json.set("temp",t);
-    json.set("humidity",h);
+    DynamicJsonDocument json(1024);
+    json["temp"] = t;
+    json["humidity"] = h;
+  
     delay(3000);
-    Firebase.updateNodeSilent(fbdo, path_data + fbdo.pushName() , json);
+    Firebase.updateNodeSilent(fbdo, path_data + fbdo.pushName() + "/val" , json);
   }
   else {
     Serial.println("You messed up");
