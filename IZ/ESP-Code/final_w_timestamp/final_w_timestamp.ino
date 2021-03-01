@@ -61,7 +61,7 @@ void loop() {
     //    String seconds = String(fbdo.doubleData());
 
     Firebase.pushFloat(fbdo, String(path_data) + "/temp", t );
-    Firebase.pushTimestamp(fbdo, String(path_data) + "/temp");
+    Firebase.pushTimestamp(fbdo, String(path_data) + "/temp" + fbdo.pushName());
 
     Firebase.pushFloat(fbdo, String(path_data) + "/hum" , h );
     Firebase.pushTimestamp(fbdo, String(path_data) + "/hum");
