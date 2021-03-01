@@ -15,7 +15,7 @@ import plotly.express as px
 # data = json.loads(elevations)
 # df = pd.json_normalize(data['results'])
 
-data = pd.read_csv(r"C:\Users\User\Desktop\GBPL\gbpl-team-4\IZ\test.csv")
+data = pd.read_csv(r"C:\Users\Iz\Desktop\gbpl-team-4\IZ\test.csv")
 
 
 external_stylesheets = [
