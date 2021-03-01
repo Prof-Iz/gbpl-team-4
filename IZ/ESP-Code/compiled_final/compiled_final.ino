@@ -2,14 +2,14 @@
 #include <DHT_U.h> // Sensor Libraries
 
 #include <WiFi.h>
-#include <FirebaseESP32.h> //Wifi and Firebase Libararies
+#include <Firebase_ESP_Client.h>//Wifi and Firebase Libararies
 
 #include "time.h"
 
 FirebaseData fbdo;
 FirebaseConfig config_data;
 FirebaseAuth auth;
-FirebaseJson json; // Firebase database and Json Data Objects
+// Firebase database and Json Data Objects
 
 #define DHTPIN 15
 #define DHTTYPE DHT11 // Define DHT settings
@@ -27,7 +27,7 @@ int resp;
 DHT dht(DHTPIN, DHTTYPE);
 
 const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = 18000;
+const long  gmtOffset_sec = 18000; //adjust to time of you region
 const int   daylightOffset_sec = 0;
 
 int get_time() {
@@ -64,8 +64,8 @@ void setup() {
 
   Firebase.begin(&config_data, &auth );
   Firebase.reconnectWiFi(true);
-  Firebase.setReadTimeout(fbdo, 60000);
-  fbdo.setResponseSize(8192); 
+  Firebase.RTDB.setReadTimeout(&fbdo, 60000);
+  fbdo.setResponseSize(8192);
 
 
 }
@@ -74,17 +74,20 @@ void loop() {
   resp = get_time();
   switch (resp) {
     case 20:
-      t = dht.readTemperature();
-      h = dht.readHumidity();
-      json.set("temp", t);
-      json.set("humidity", h);
-      delay(3000);
-      Firebase.updateNodeSilent(fbdo, time_stamp, json);
-      break;
-      
+      {
+        t = dht.readTemperature();
+        h = dht.readHumidity();
+        FirebaseJson json;
+        json.set("temp", t);
+        json.set("humidity", h);
+        Firebase.RTDB.updateNodeSilent(&fbdo, time_stamp, &json);
+        delay(3000);
+        break;
+      }
     case 10:
-      Serial.println("Error");
-      break;
-
+      {
+        Serial.println("Error");
+        break;
+      }
   }
 }

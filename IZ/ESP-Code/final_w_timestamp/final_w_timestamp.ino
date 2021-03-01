@@ -23,10 +23,6 @@ float t, h;
 
 DHT dht(DHTPIN, DHTTYPE);
 
-const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = 18000;
-const int   daylightOffset_sec = 0;
-
 
 void setup() {
   Serial.begin(115200);
@@ -55,16 +51,22 @@ void setup() {
 
 void loop() {
 
-  if (Firebase.pushTimestamp(fbdo, path_data))
-  {
-    t = dht.readTemperature();
-    h = dht.readHumidity();
-    DynamicJsonDocument json(1024);
-    json["temp"] = t;
-    json["humidity"] = h;
-  
-    delay(3000);
-    Firebase.updateNodeSilent(fbdo, path_data + fbdo.pushName() + "/val" , json);
+  t = dht.readTemperature();
+  h = dht.readHumidity();
+  if (!(isnan(t) || isnan(h))) {
+
+    //    Firebase.getDouble(fbdo, path_data);
+    //    char seconds[10];
+    //    sprintf(seconds, "%d", fbdo.intData());
+    //    String seconds = String(fbdo.doubleData());
+
+    Firebase.pushFloat(fbdo, String(path_data) + "/temp", t );
+    Firebase.pushTimestamp(fbdo, String(path_data) + "/temp");
+
+    Firebase.pushFloat(fbdo, String(path_data) + "/hum" , h );
+    Firebase.pushTimestamp(fbdo, String(path_data) + "/hum");
+
+    delay(5000);
   }
   else {
     Serial.println("You messed up");
