@@ -20,23 +20,27 @@ FirebaseAuth auth;
 #define WIFI_SSID "abu@unifi"
 #define WIFI_PASSWORD "izdhan.iyaa.abu" //Enter your WIFI SSID and Password, not 5Ghz
 
-char time_stamp[35];
+char time_stamp[20];
+
 
 float t, h;
 int resp;
 DHT dht(DHTPIN, DHTTYPE);
 
 const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = 18000; //adjust to time of you region
+const long  gmtOffset_sec = 28800; //adjust to time of you region
 const int   daylightOffset_sec = 0;
 
 int get_time() {
   struct tm timeinfo;
+  time_t timeSinceEpoch;
   if (!getLocalTime(&timeinfo)) {
     Serial.println("Failed to obtain time");
     return 10;
   } else {
-    strftime(time_stamp, 35, "/MAL01/iz/data/%F/%T/", &timeinfo);
+    
+//    strftime(time_stamp, 20, "MAL01/iz/%d", timeSinceEpoch);
+    sprintf(time_stamp, "MAL01/iz/%d", time(&timeSinceEpoch));
     Serial.println(time_stamp);
     return 20;
   }
@@ -81,7 +85,7 @@ void loop() {
         json.set("temp", t);
         json.set("humidity", h);
         Firebase.RTDB.updateNodeSilent(&fbdo, time_stamp, &json);
-        delay(3000);
+        delay(5000);
         break;
       }
     case 10:
