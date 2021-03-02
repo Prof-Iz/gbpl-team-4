@@ -118,10 +118,12 @@ def update_graph(n):
     try:
         readings = db.child("MAL01/iz/").order_by_key().limit_to_last(1).get(token=user['idToken'])
         for reading in readings.each():
-            X.append(pd.Timestamp(float(reading.key()), unit='s'))
-            temp = reading.val()
-            Y1.append(temp["temp"])
-            Y2.append(temp["humidity"])
+            stamp = pd.Timestamp(float(reading.key()), unit='s')
+            if stamp != X[-1]:
+                X.append(stamp)
+                temp = reading.val()
+                Y1.append(temp["temp"])
+                Y2.append(temp["humidity"])
     except Exception as e:
         print(e)
 
@@ -129,10 +131,10 @@ def update_graph(n):
     graph_humidity_data = go.Scatter(x=list(X), y=list(Y2), name="humidity", mode="lines+markers")
 
     graph_temp = go.Figure(data=graph_temp_data,
-                           layout=go.Layout(yaxis=dict(range=[20, 45])))
+                           layout=go.Layout(yaxis=dict(range=[min(Y1) - 5, min(Y1) + 5])))
 
     graph_humidity = go.Figure(data=graph_humidity_data,
-                               layout=go.Layout(yaxis=dict(range=[50, 100])))
+                               layout=go.Layout(yaxis=dict(range=[min(Y2) - 5, max(Y2) + 5])))
 
     dash_update = [f"The Dash is now showing the Readings at {X[-1]}"]
 
