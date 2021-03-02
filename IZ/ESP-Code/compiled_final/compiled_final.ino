@@ -17,8 +17,8 @@ FirebaseAuth auth;
 #define FIREBASE_HOST "https://gpbl-team-04-default-rtdb.firebaseio.com/"
 #define API_KEY "AIzaSyBbo4ZGJwHpdDMsElUZgstbXET-R3VIkO4"
 
-#define WIFI_SSID "abu@unifi"
-#define WIFI_PASSWORD "izdhan.iyaa.abu" //Enter your WIFI SSID and Password, not 5Ghz
+#define WIFI_SSID
+#define WIFI_PASSWORD  //Enter your WIFI SSID and Password, not 5Ghz
 
 char time_stamp[20];
 
@@ -28,7 +28,7 @@ int resp;
 DHT dht(DHTPIN, DHTTYPE);
 
 const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = 28800; //adjust to time of you region
+const long  gmtOffset_sec = 0; //adjust to time of you region
 const int   daylightOffset_sec = 0;
 
 int get_time() {
@@ -38,10 +38,9 @@ int get_time() {
     Serial.println("Failed to obtain time");
     return 10;
   } else {
-    
-//    strftime(time_stamp, 20, "MAL01/iz/%d", timeSinceEpoch);
-    sprintf(time_stamp, "MAL01/iz/%d", time(&timeSinceEpoch));
-    Serial.println(time_stamp);
+
+
+    sprintf(time_stamp, "TAI01/mi/%d", time(&timeSinceEpoch));
     return 20;
   }
 }
@@ -56,11 +55,11 @@ void setup() {
     Serial.print(".");
     delay(300);
   }
-  dht.begin();
+  dht.begin(); // just begin listening
   config_data.host = FIREBASE_HOST;
   config_data.api_key = API_KEY;
 
-  auth.user.email = "iz@test.com";
+  auth.user.email = "mcut@team4.com";
   auth.user.password = "password";
 
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);

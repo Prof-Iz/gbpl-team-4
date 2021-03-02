@@ -1,0 +1,18 @@
+{
+    "rules": {
+        "MAL01": {
+            "iz": {
+                "$sub": {
+                    ".read": "auth.id =='anzAoljBpzcgq79tBdtEzpWXPqg1'",
+                    ".write": "auth.id =='anzAoljBpzcgq79tBdtEzpWXPqg1'  "
+                }
+            },
+            "sow": {
+                "$sub": {
+                    ".read": "auth.uid == 'IdTMTIlNcWQw8TAUtMdvsZsgYOy1'",
+                    ".write": "auth.uid == 'IdTMTIlNcWQw8TAUtMdvsZsgYOy1'"
+                }
+            }
+        }
+    }
+}
