@@ -41,6 +41,8 @@ X.append(1)
 Y1.append(1)
 Y2.append(1)
 
+warehouse_info = db.child("warehouse/").get(token=user['idToken'])
+
 external_stylesheets = [
     {
         "href": "https://fonts.googleapis.com/css2?"
@@ -65,18 +67,27 @@ app.layout = html.Div(
             className="header"),
         html.Div(children=[
             html.Div(children=[
-                html.Div(children="Type", className="menu-title"),
+                html.Div(children="Warehouse", className="menu-title"),
                 dcc.Dropdown(
                     id="type-filter",
-                    options=[
-                        {"label": "Temperature", "value": "temp"},
-                        {"label": "Humidity", "value": "humidity"},
-                    ],
-                    value="temp",
+                    options=[{"label": warehouse.key(), "value": warehouse.key()} for warehouse in warehouse_info.each()
+                             ],
+                    value="MAL01",
                     clearable=False,
                     className="dropdown"
                 ),
-            ], ),
+            ],
+            ),
+            html.Div(children=[
+                html.Div(children="Sensor", className="menu-title"),
+                dcc.Dropdown(
+                    id="sensor-filter",
+                    value="iz",
+                    clearable=False,
+                    className="dropdown"
+                ),
+            ],
+            ),
             html.Div(children=[
                 html.Div(children="How Many Records", className="menu-title"),
                 dcc.Slider(
@@ -92,12 +103,12 @@ app.layout = html.Div(
         html.Div(
             children=[
                 html.Div(
-                    children=dcc.Graph(id="temp-display", figure={}),
+                    children=dcc.Graph(id="temp-display", animate=True),
                     className="card"),
                 html.Div(
-                    children=dcc.Graph(id="humidity-display", figure={}),
+                    children=dcc.Graph(id="humidity-display", animate=True),
                     className="card"),
-                dcc.Interval(interval=6000, n_intervals=0, id='time_interval')]),
+                dcc.Interval(interval=5000, n_intervals=0, id='time_interval')]),
         dcc.Interval(interval=600000, n_intervals=0, id='refresh_auth')
     ],
 
@@ -131,14 +142,26 @@ def update_graph(n):
     graph_humidity_data = go.Scatter(x=list(X), y=list(Y2), name="humidity", mode="lines+markers")
 
     graph_temp = go.Figure(data=graph_temp_data,
-                           layout=go.Layout(yaxis=dict(range=[min(Y1) - 5, min(Y1) + 5])))
+                           layout=go.Layout(xaxis=dict(range=[X[0], X[-1]]),
+                                            yaxis=dict(range=[min(Y1) - 1, min(Y1) + 1])))
 
     graph_humidity = go.Figure(data=graph_humidity_data,
-                               layout=go.Layout(yaxis=dict(range=[min(Y2) - 5, max(Y2) + 5])))
+                               layout=go.Layout(xaxis=dict(range=[X[0], X[-1]]),
+                                                yaxis=dict(range=[min(Y2) - 1, max(Y2) + 1])))
 
     dash_update = [f"The Dash is now showing the Readings at {X[-1]}"]
 
     return dash_update, graph_temp, graph_humidity
+
+
+@app.callback([Output("sensor-filter", "options")],
+              [
+                  Input("type-filter", "value")
+              ])
+def update_options(selection):
+    print(selection, type(selection))
+    options = [{"label": x.val(), "value": x.val()} for x in warehouse_info[selection]["esp"].each()]
+    return options
 
 
 if __name__ == "__main__":
