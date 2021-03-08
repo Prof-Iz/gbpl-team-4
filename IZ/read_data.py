@@ -183,7 +183,7 @@ def update_graph(n, sensor, warehouse):
                 Y1D = []
                 Y2D = []
                 print("Database accessed")
-                readings = db.child(f"{warehouse}/{sensor}/").order_by_key().limit_to_last(100).get(
+                readings = db.child(f"{warehouse}/{sensor}/").order_by_key().get(
                     token=user['idToken'])
                 for reading in readings.each():
                     stamp = pd.Timestamp(float(reading.key()), unit='s')
@@ -200,21 +200,19 @@ def update_graph(n, sensor, warehouse):
 
         graph_temp_data = go.Scatter(x=list(XD), y=list(Y1D), name="temperature", mode="lines+markers")
         graph_humidity_data = go.Scatter(x=list(XD), y=list(Y2D), name="humidity", mode="lines+markers")
-        title = f"Temperature Readings {warehouse} - {sensor}"
+        title = f"Temperature Readings {warehouse}- Sensor: {sensor}"
         graph_temp = go.Figure(data=graph_temp_data,
-                               layout=go.Layout(
+                               layout=go.Layout(xaxis=dict(range=[XD[0], XD[-1]]),
                                                 yaxis=dict(range=[min(Y1D) - 1, min(Y1D) + 1]), title=title,
-                                                ))
+                                                transition={'duration': 1000, 'easing': 'cubic-in-out'}))
 
         graph_humidity = go.Figure(data=graph_humidity_data,
                                    layout=go.Layout(xaxis=dict(range=[XD[0], XD[-1]]),
                                                     yaxis=dict(range=[min(Y2D) - 1, max(Y2D) + 1]),
-                                                    title=f"Humidity Readings {warehouse} {sensor}",
+                                                    title=f"Humidity Readings {warehouse}- Sensor:{sensor}",
                                                     transition={'duration': 1000, 'easing': 'cubic-in-out'}))
 
         dash_update = [f"The Dash is now showing the Historical Readings for {warehouse} - Sensor: {sensor}"]
-
-
 
     return dash_update, graph_temp, graph_humidity
 
