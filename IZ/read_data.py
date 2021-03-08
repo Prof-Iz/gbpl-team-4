@@ -9,6 +9,7 @@ from dash.dependencies import Output, Input
 import plotly.graph_objs as go
 # import plotly.express as px
 from collections import deque
+import dash_daq as daq
 
 firebaseConfig = {
     "apiKey": "AIzaSyBbo4ZGJwHpdDMsElUZgstbXET-R3VIkO4",
@@ -23,15 +24,6 @@ firebaseConfig = {
 
 firebase = pyrebase.initialize_app(config=firebaseConfig)
 
-email = "iz@test.com"
-password = "password"
-
-auth = firebase.auth()
-
-user = auth.sign_in_with_email_and_password(email, password)
-
-db = firebase.database()
-
 X = deque(maxlen=5)
 Y1 = deque(maxlen=5)
 Y2 = deque(maxlen=5)
@@ -42,7 +34,6 @@ X.append(1)
 Y1.append(1)
 Y2.append(1)
 
-warehouse_info = db.child("warehouse/").get(token=user['idToken'])
 prev_warehouse = ''
 prev_sensor = ''
 
@@ -50,10 +41,23 @@ external_stylesheets = [
     {
         "href": "https://fonts.googleapis.com/css2?"
                 "family=Lato:wght@400;700&display=swap",
-        "rel": "stylesheet",
+        "rel": 'https://codepen.io/chriddyp/pen/bWLwgP.css',
     },
 ]
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+email = "iz@test.com"
+password = "password"
+
+auth = firebase.auth()
+
+db = firebase.database()
+
+user = auth.sign_in_with_email_and_password(email, password)
+
+warehouse_info = db.child("warehouse/").get(token=user['idToken'])
+ac_info = db.child("ac/").get(token=user['idToken'])
+
 app.title = "GPBL 04"
 
 app.layout = html.Div(
@@ -73,8 +77,7 @@ app.layout = html.Div(
                 html.Div(children="Warehouse", className="menu-title"),
                 dcc.Dropdown(
                     id="type-filter",
-                    options=[{"label": warehouse.key(), "value": warehouse.key()} for warehouse in warehouse_info.each()
-                             ],
+                    options=[{"label": x.key(), "value": x.key()} for x in warehouse_info.each()],
                     value="",
                     clearable=False,
                     className="dropdown"
@@ -92,9 +95,55 @@ app.layout = html.Div(
                 ),
             ],
             ),
+            html.Div(children=[
+                html.Div(children="Realtime", className="menu-title"),
+                daq.BooleanSwitch(
+                    id="real-time-switch",
+                    on=True
+                ),
+            ],
+            ),
         ], className="menu"),
         html.Div(
             children=[
+                html.Div(
+                    children=[daq.Gauge(
+                        showCurrentValue=True,
+                        color="#da7f25",
+                        units="C",
+                        value=0,
+                        max=40,
+                        min=0,
+                        id="temp_gauge"
+                    ),
+                        daq.Gauge(
+                            showCurrentValue=True,
+                            color="#33CC9F",
+                            units="%",
+                            value=0,
+                            max=100,
+                            min=0,
+                            id="humidity_gauge"
+                        ),
+                        daq.Knob(
+                            id='control-ac',
+                            size=140,
+                            scale={'start': 16,
+                                   'labelInterval': 5,
+                                   'interval': 1},
+                            max=30,
+                            value=24,
+                            color={"gradient": True,
+                                   "ranges": {"green": [0, 20], "yellow": [20, 24], "red": [24, 30]}},
+                        ),
+                        daq.LEDDisplay(
+                            label="Temperature of the AC",
+                            value='0',
+                            color="#FF5E5E",
+                            id="value_ac"
+                        )
+                    ],
+                    className="card-gadget"),
                 html.Div(
                     children=dcc.Graph(id="temp-display"),
                     className="card"),
@@ -112,24 +161,25 @@ app.layout = html.Div(
 @app.callback(
     [Output("test_stuff", "children"),
      Output("temp-display", "figure"),
-     Output("humidity-display", "figure")],
+     Output("humidity-display", "figure"),
+     Output('humidity_gauge', "value"),
+     Output("temp_gauge", 'value')],
     [
         Input('time_interval', "n_intervals"),
         Input('sensor-filter', "value"),
         Input('type-filter', 'value'),
+        Input('real-time-switch', 'on')
 
     ],
 )
-def update_graph(n, sensor, warehouse):
+def update_graph(n, sensor, warehouse, realtime):
     global prev_warehouse
     global prev_sensor
-    date_mode = True
-    search = True
     global XD
     global Y1D
     global Y2D
 
-    if not date_mode:
+    if realtime:
         if sensor != prev_sensor or warehouse != prev_warehouse:
             X.clear()
             Y1.clear()
@@ -142,7 +192,6 @@ def update_graph(n, sensor, warehouse):
 
         elif sensor != '' and warehouse != '':
             try:
-                print("Database accessed")
                 readings = db.child(f"{warehouse}/{sensor}/").order_by_key().limit_to_last(1).get(token=user['idToken'])
                 for reading in readings.each():
                     stamp = pd.Timestamp(float(reading.key()), unit='s')
@@ -154,6 +203,8 @@ def update_graph(n, sensor, warehouse):
 
                 prev_warehouse = warehouse
                 prev_sensor = sensor
+                temp_gauge = Y1[-1]
+                humidity_gauge = Y2[-1]
 
             except Exception as e:
                 print(e)
@@ -162,7 +213,8 @@ def update_graph(n, sensor, warehouse):
         graph_humidity_data = go.Scatter(x=list(X), y=list(Y2), name="humidity", mode="lines+markers")
         graph_temp = go.Figure(data=graph_temp_data,
                                layout=go.Layout(xaxis=dict(range=[X[0], X[-1]]),
-                                                yaxis=dict(range=[min(Y1) - 1, min(Y1) + 1]), title=f"Temperature Readings {warehouse}- Sensor:{sensor}",
+                                                yaxis=dict(range=[min(Y1) - 1, min(Y1) + 1]),
+                                                title=f"Temperature Readings {warehouse}- Sensor:{sensor}",
                                                 transition={'duration': 1000, 'easing': 'cubic-in-out'}))
 
         graph_humidity = go.Figure(data=graph_humidity_data,
@@ -173,7 +225,7 @@ def update_graph(n, sensor, warehouse):
 
         dash_update = [f"The Dash is now showing the Readings at {X[-1]}"]
 
-    elif search and date_mode:
+    elif realtime:
         if sensor != prev_sensor or warehouse != prev_warehouse:
 
             prev_warehouse = warehouse
@@ -182,7 +234,6 @@ def update_graph(n, sensor, warehouse):
                 XD = []
                 Y1D = []
                 Y2D = []
-                print("Database accessed")
                 readings = db.child(f"{warehouse}/{sensor}/").order_by_key().get(
                     token=user['idToken'])
                 for reading in readings.each():
@@ -203,18 +254,21 @@ def update_graph(n, sensor, warehouse):
         title = f"Temperature Readings {warehouse}- Sensor: {sensor}"
         graph_temp = go.Figure(data=graph_temp_data,
                                layout=go.Layout(xaxis=dict(range=[XD[0], XD[-1]]),
-                                                yaxis=dict(range=[min(Y1D) - 1, min(Y1D) + 1]), title=title,
-                                                transition={'duration': 1000, 'easing': 'cubic-in-out'}))
+                                                yaxis=dict(range=[min(Y1D) - 10, min(Y1D) + 10]), title=title,
+                                                ))
 
         graph_humidity = go.Figure(data=graph_humidity_data,
                                    layout=go.Layout(xaxis=dict(range=[XD[0], XD[-1]]),
-                                                    yaxis=dict(range=[min(Y2D) - 1, max(Y2D) + 1]),
+                                                    yaxis=dict(range=[min(Y2D) - 10, max(Y2D) + 10]),
                                                     title=f"Humidity Readings {warehouse}- Sensor:{sensor}",
-                                                    transition={'duration': 1000, 'easing': 'cubic-in-out'}))
+                                                    ))
 
         dash_update = [f"The Dash is now showing the Historical Readings for {warehouse} - Sensor: {sensor}"]
 
-    return dash_update, graph_temp, graph_humidity
+        humidity_gauge = 0
+        temp_gauge = 0
+
+    return dash_update, graph_temp, graph_humidity, humidity_gauge, temp_gauge
 
 
 @app.callback(Output("sensor-filter", "options"),
@@ -223,6 +277,7 @@ def update_options(selection):
     options = [{"label": x, "value": x} for x in warehouse_info.val()[selection]["esp"]]
     return list(options)
 
+@app.callback(Output())
 
 if __name__ == "__main__":
     app.run_server(debug=True)
