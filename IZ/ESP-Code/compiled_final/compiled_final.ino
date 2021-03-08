@@ -84,7 +84,7 @@ void loop() {
         json.set("temp", t);
         json.set("humidity", h);
         Firebase.RTDB.updateNodeSilent(&fbdo, time_stamp, &json);
-        delay(5000);
+        delay(3000);
         break;
       }
     case 10:

@@ -9,7 +9,6 @@ from dash.dependencies import Output, Input
 import plotly.graph_objs as go
 # import plotly.express as px
 from collections import deque
-import dash_bootstrap_components as dbc
 
 firebaseConfig = {
     "apiKey": "AIzaSyBbo4ZGJwHpdDMsElUZgstbXET-R3VIkO4",
@@ -33,18 +32,19 @@ user = auth.sign_in_with_email_and_password(email, password)
 
 db = firebase.database()
 
-# readings = db.child("MAL01/iz").order_by_key().limit_to_last(1).get(token=user['idToken'])
-
 X = deque(maxlen=5)
 Y1 = deque(maxlen=5)
 Y2 = deque(maxlen=5)
+XD = [1]
+Y1D = [1]
+Y2D = [1]
 X.append(1)
 Y1.append(1)
 Y2.append(1)
 
 warehouse_info = db.child("warehouse/").get(token=user['idToken'])
-testing = [{"label": x, "value": x} for x in warehouse_info.val()["MAL01"]["esp"]]
-print(testing)
+prev_warehouse = ''
+prev_sensor = ''
 
 external_stylesheets = [
     {
@@ -101,14 +101,13 @@ app.layout = html.Div(
                 html.Div(
                     children=dcc.Graph(id="humidity-display"),
                     className="card"),
-                dcc.Interval(interval=5000, n_intervals=0, id='time_interval')]),
+                dcc.Interval(interval=2000, n_intervals=0, id='time_interval')]),
         # dcc.Interval(interval=600000, n_intervals=0, id='refresh_auth')
     ],
 
     className="wrapper",
 )
 
-issue = "" #store issues in update_graph
 
 @app.callback(
     [Output("test_stuff", "children"),
@@ -122,42 +121,100 @@ issue = "" #store issues in update_graph
     ],
 )
 def update_graph(n, sensor, warehouse):
+    global prev_warehouse
+    global prev_sensor
+    date_mode = True
+    search = True
+    global XD
+    global Y1D
+    global Y2D
 
-    if not (sensor == "" or warehouse == ""):
-        try:
-            readings = db.child(f"{warehouse}/{sensor}/").order_by_key().limit_to_last(1).get(token=user['idToken'])
-            for reading in readings.each():
-                stamp = pd.Timestamp(float(reading.key()), unit='s')
-                if stamp != X[-1]:
-                    X.append(stamp)
-                    temp = reading.val()
-                    Y1.append(temp["temp"])
-                    Y2.append(temp["humidity"])
-        except Exception as e:
-            print(e)
-    else:
-        X.clear()
-        Y1.clear()
-        Y2.clear()
-        X.append(1)
-        Y1.append(1)
-        Y2.append(1)
+    if not date_mode:
+        if sensor != prev_sensor or warehouse != prev_warehouse:
+            X.clear()
+            Y1.clear()
+            Y2.clear()
+            X.append(1)
+            Y1.append(1)
+            Y2.append(1)
+            prev_warehouse = warehouse
+            prev_sensor = sensor
 
-    graph_temp_data = go.Scatter(x=list(X), y=list(Y1), name="temperature", mode="lines+markers")
-    graph_humidity_data = go.Scatter(x=list(X), y=list(Y2), name="humidity", mode="lines+markers")
-    title = f"Temperature Readings {warehouse} - {sensor}"
-    graph_temp = go.Figure(data=graph_temp_data,
-                           layout=go.Layout(xaxis=dict(range=[X[0], X[-1]]),
-                                            yaxis=dict(range=[min(Y1) - 1, min(Y1) + 1]), title=title,
-                                            transition={'duration':1000,'easing':'cubic-in-out'}))
+        elif sensor != '' and warehouse != '':
+            try:
+                print("Database accessed")
+                readings = db.child(f"{warehouse}/{sensor}/").order_by_key().limit_to_last(1).get(token=user['idToken'])
+                for reading in readings.each():
+                    stamp = pd.Timestamp(float(reading.key()), unit='s')
+                    if stamp != X[-1]:
+                        X.append(stamp)
+                        temp = reading.val()
+                        Y1.append(temp["temp"])
+                        Y2.append(temp["humidity"])
 
-    graph_humidity = go.Figure(data=graph_humidity_data,
+                prev_warehouse = warehouse
+                prev_sensor = sensor
+
+            except Exception as e:
+                print(e)
+
+        graph_temp_data = go.Scatter(x=list(X), y=list(Y1), name="temperature", mode="lines+markers")
+        graph_humidity_data = go.Scatter(x=list(X), y=list(Y2), name="humidity", mode="lines+markers")
+        graph_temp = go.Figure(data=graph_temp_data,
                                layout=go.Layout(xaxis=dict(range=[X[0], X[-1]]),
-                                                yaxis=dict(range=[min(Y2) - 1, max(Y2) + 1]),
-                                                title=f"Humidity Readings {warehouse} {sensor}",
-                                                transition={'duration':1000,'easing':'cubic-in-out'}))
+                                                yaxis=dict(range=[min(Y1) - 1, min(Y1) + 1]), title=f"Temperature Readings {warehouse}- Sensor:{sensor}",
+                                                transition={'duration': 1000, 'easing': 'cubic-in-out'}))
 
-    dash_update = [f"The Dash is now showing the Readings at {X[-1]}"]
+        graph_humidity = go.Figure(data=graph_humidity_data,
+                                   layout=go.Layout(xaxis=dict(range=[X[0], X[-1]]),
+                                                    yaxis=dict(range=[min(Y2) - 1, max(Y2) + 1]),
+                                                    title=f"Humidity Readings {warehouse}- Sensor: {sensor}",
+                                                    transition={'duration': 1000, 'easing': 'cubic-in-out'}))
+
+        dash_update = [f"The Dash is now showing the Readings at {X[-1]}"]
+
+    elif search and date_mode:
+        if sensor != prev_sensor or warehouse != prev_warehouse:
+
+            prev_warehouse = warehouse
+            prev_sensor = sensor
+            try:
+                XD = []
+                Y1D = []
+                Y2D = []
+                print("Database accessed")
+                readings = db.child(f"{warehouse}/{sensor}/").order_by_key().limit_to_last(100).get(
+                    token=user['idToken'])
+                for reading in readings.each():
+                    stamp = pd.Timestamp(float(reading.key()), unit='s')
+                    XD.append(stamp)
+                    temp = reading.val()
+                    Y1D.append(temp["temp"])
+                    Y2D.append(temp["humidity"])
+
+            except Exception as e:
+                print(e)
+                XD = [1]
+                Y1D = [1]
+                Y2D = [1]
+
+        graph_temp_data = go.Scatter(x=list(XD), y=list(Y1D), name="temperature", mode="lines+markers")
+        graph_humidity_data = go.Scatter(x=list(XD), y=list(Y2D), name="humidity", mode="lines+markers")
+        title = f"Temperature Readings {warehouse} - {sensor}"
+        graph_temp = go.Figure(data=graph_temp_data,
+                               layout=go.Layout(
+                                                yaxis=dict(range=[min(Y1D) - 1, min(Y1D) + 1]), title=title,
+                                                ))
+
+        graph_humidity = go.Figure(data=graph_humidity_data,
+                                   layout=go.Layout(xaxis=dict(range=[XD[0], XD[-1]]),
+                                                    yaxis=dict(range=[min(Y2D) - 1, max(Y2D) + 1]),
+                                                    title=f"Humidity Readings {warehouse} {sensor}",
+                                                    transition={'duration': 1000, 'easing': 'cubic-in-out'}))
+
+        dash_update = [f"The Dash is now showing the Historical Readings for {warehouse} - Sensor: {sensor}"]
+
+
 
     return dash_update, graph_temp, graph_humidity
 
