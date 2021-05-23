@@ -3,6 +3,7 @@
 
 #include <WiFi.h>
 #include <FirebaseESP32.h> //Wifi and Firebase Libararies
+#include "cred.h"
 
 FirebaseData fbdo;
 FirebaseConfig config_data;
@@ -15,8 +16,7 @@ FirebaseJson json; // Firebase database and Json Data Objects
 #define FIREBASE_HOST "https://gpbl-team-04-default-rtdb.firebaseio.com/"
 #define API_KEY "AIzaSyBbo4ZGJwHpdDMsElUZgstbXET-R3VIkO4"
 
-#define WIFI_SSID "abu@unifi"
-#define WIFI_PASSWORD "izdhan.iyaa.abu" //Enter your WIFI SSID and Password, not 5Ghz
+ //Enter your WIFI SSID and Password, not 5Ghz
 
 
 

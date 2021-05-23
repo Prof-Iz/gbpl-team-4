@@ -56,7 +56,6 @@ db = firebase.database()
 user = auth.sign_in_with_email_and_password(email, password)
 
 warehouse_info = db.child("warehouse/").get(token=user['idToken'])
-ac_info = db.child("ac/").get(token=user['idToken'])
 
 app.title = "GPBL 04"
 
@@ -132,7 +131,7 @@ app.layout = html.Div(
                                    'labelInterval': 5,
                                    'interval': 1},
                             max=30,
-                            value=24,
+                            value=0,
                             color={"gradient": True,
                                    "ranges": {"green": [0, 20], "yellow": [20, 24], "red": [24, 30]}},
                         ),
@@ -225,7 +224,7 @@ def update_graph(n, sensor, warehouse, realtime):
 
         dash_update = [f"The Dash is now showing the Readings at {X[-1]}"]
 
-    elif realtime:
+    elif not realtime:
         if sensor != prev_sensor or warehouse != prev_warehouse:
 
             prev_warehouse = warehouse
@@ -277,7 +276,22 @@ def update_options(selection):
     options = [{"label": x, "value": x} for x in warehouse_info.val()[selection]["esp"]]
     return list(options)
 
-@app.callback(Output())
+
+@app.callback(Output("value_ac", 'value'),
+              [Input("control-ac", 'value'),
+               Input("type-filter", "value"),
+               Input("sensor-filter", "value")])
+def change_ac(new_temperature, warehouse, sensor):
+    if warehouse != '' and sensor != '':
+        # data = {
+        #     f"{warehouse}": {
+        #         f"{sensor}": new_temperature
+        #     }
+        # }
+        db.child("ac").child(warehouse).update({sensor: new_temperature}, token=user['idToken'])
+
+    return new_temperature
+
 
 if __name__ == "__main__":
     app.run_server(debug=True)
