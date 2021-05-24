@@ -12,7 +12,7 @@ from collections import deque
 import dash_daq as daq
 
 firebaseConfig = {
-    "apiKey": "AIzaSyBbo4ZGJwHpdDMsElUZgstbXET-R3VIkO4",
+    "apiKey": "",
     "authDomain": "gpbl-team-04.firebaseapp.com",
     "databaseURL": "https://gpbl-team-04-default-rtdb.firebaseio.com",
     "projectId": "gpbl-team-04",
