@@ -1,1 +1,0 @@
-# Prepare code for DHT11 and Fire Sensor

@@ -1,3 +1,7 @@
 
 IZ/live_test.py
 .vscode/settings.json
+IZ/rules.json
+IZ/test.csv
+IZ/test.json
+IZ/dash_test.py

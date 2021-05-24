@@ -14,11 +14,11 @@ FirebaseAuth auth;
 #define DHTPIN 15
 #define DHTTYPE DHT11 // Define DHT settings
 
-#define FIREBASE_HOST "https://gpbl-team-04-default-rtdb.firebaseio.com/"
-#define API_KEY "AIzaSyBbo4ZGJwHpdDMsElUZgstbXET-R3VIkO4"
+#define FIREBASE_HOST
+#define API_KEY
 
-#define WIFI_SSID "abu@unifi"
-#define WIFI_PASSWORD "izdhan.iyaa.abu" //Enter your WIFI SSID and Password, not 5Ghz
+#define WIFI_SSID
+#define WIFI_PASSWORD  //Enter your WIFI SSID and Password, not 5Ghz
 
 char time_stamp[20];
 float current_ac = 0.0;

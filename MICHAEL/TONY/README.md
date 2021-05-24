@@ -1,2 +1,0 @@
-# Code for Heroku App
-Deploy a Node.JS application made with ExpressJS on Heroku. POST requests from ESP32 stored in a Databse on the App. GET Requests from the app return the values of the Sensors to the Client.
